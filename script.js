@@ -138,7 +138,7 @@ yesBtn.addEventListener('click', function () {
     state = 'final';
 
     questionUI.style.opacity = '0';
-    document.body.classList.add('dark-theme'); // Make it dark for the glow
+    document.body.classList.add('dark-theme');
     setTimeout(() => {
         questionUI.style.display = 'none';
     }, 500);
@@ -171,22 +171,27 @@ window.addEventListener('resize', function () {
 
 function getLilyTexture(color) {
     const svgString = `
-    <svg width="60" height="60" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+    <svg width="80" height="80" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
         <defs>
             <radialGradient id="grad" cx="50%" cy="50%" r="50%">
                 <stop offset="0%" style="stop-color:white;stop-opacity:0.9" />
-                <stop offset="80%" style="stop-color:${color};stop-opacity:0.6" />
+                <stop offset="80%" style="stop-color:${color};stop-opacity:0.8" />
                 <stop offset="100%" style="stop-color:${color};stop-opacity:0" />
             </radialGradient>
         </defs>
-        <g stroke="none">
-             <!-- 5 smooth lily petals -->
-             <path fill="url(#grad)" d="M60 60 C40 50 35 15 60 5 C85 15 80 50 60 60" transform="rotate(0, 60, 60)" />
-             <path fill="url(#grad)" d="M60 60 C40 50 35 15 60 5 C85 15 80 50 60 60" transform="rotate(72, 60, 60)" />
-             <path fill="url(#grad)" d="M60 60 C40 50 35 15 60 5 C85 15 80 50 60 60" transform="rotate(144, 60, 60)" />
-             <path fill="url(#grad)" d="M60 60 C40 50 35 15 60 5 C85 15 80 50 60 60" transform="rotate(216, 60, 60)" />
-             <path fill="url(#grad)" d="M60 60 C40 50 35 15 60 5 C85 15 80 50 60 60" transform="rotate(288, 60, 60)" />
-             <circle cx="60" cy="60" r="10" fill="#FFFACD" opacity="0.9" />
+        <g stroke="none" transform="translate(80, 80)">
+             <path fill="url(#grad)" d="M0 0 C-15 -15 -15 -80 0 -80 C15 -80 15 -15 0 0" transform="rotate(0)" />
+             <path fill="url(#grad)" d="M0 0 C-15 -15 -15 -80 0 -80 C15 -80 15 -15 0 0" transform="rotate(60)" />
+             <path fill="url(#grad)" d="M0 0 C-15 -15 -15 -80 0 -80 C15 -80 15 -15 0 0" transform="rotate(120)" />
+             <path fill="url(#grad)" d="M0 0 C-15 -15 -15 -80 0 -80 C15 -80 15 -15 0 0" transform="rotate(180)" />
+             <path fill="url(#grad)" d="M0 0 C-15 -15 -15 -80 0 -80 C15 -80 15 -15 0 0" transform="rotate(240)" />
+             <path fill="url(#grad)" d="M0 0 C-15 -15 -15 -80 0 -80 C15 -80 15 -15 0 0" transform="rotate(300)" />
+             
+             <circle cx="0" cy="0" r="6" fill="#f1f8e9" />
+             <rect x="-1" y="-15" width="2" height="15" fill="#f1f8e9" transform="rotate(45)" />
+             <rect x="-1" y="-15" width="2" height="15" fill="#f1f8e9" transform="rotate(135)" />
+             <circle cx="10" cy="-10" r="2" fill="#5d4037" transform="rotate(45)" />
+             <circle cx="10" cy="-10" r="2" fill="#5d4037" transform="rotate(135)" />
         </g>
     </svg>`;
     return 'data:image/svg+xml;base64,' + btoa(svgString);
@@ -253,50 +258,66 @@ function drawLily(ctx, x, y, size, color) {
     ctx.translate(x, y);
     ctx.scale(size, size);
 
-    // Glow for the whole flower - pink glow
-    ctx.shadowBlur = 25;
+    ctx.shadowBlur = 15;
     ctx.shadowColor = color;
 
-    // Draw petals - Soft, rounded, and pink
-    const petalCount = 5;
+    const petalCount = 6;
     for (let i = 0; i < petalCount; i++) {
-        const angle = (i * Math.PI * 2) / petalCount - Math.PI / 2;
+        const angle = (i * Math.PI * 2) / petalCount;
+        const length = i % 2 === 0 ? 100 : 85;
+
         ctx.save();
         ctx.rotate(angle);
 
-        // Petal Gradient: Solid pink to soft white/transparent edges
-        const gradient = ctx.createLinearGradient(0, 0, 0, -50);
-        gradient.addColorStop(0, color);
-        gradient.addColorStop(0.5, color + 'cc');
-        gradient.addColorStop(0.8, 'rgba(255, 255, 255, 0.4)');
-        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        const gradient = ctx.createLinearGradient(0, 0, 0, -length);
+        gradient.addColorStop(0, '#f1f8e9');
+        gradient.addColorStop(0.2, color);
+        gradient.addColorStop(0.8, color);
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0.2)');
 
         ctx.fillStyle = gradient;
         ctx.beginPath();
         ctx.moveTo(0, 0);
-        // Smoother, rounder petal shape
-        ctx.bezierCurveTo(-35, -15, -40, -50, 0, -65);
-        ctx.bezierCurveTo(40, -50, 35, -15, 0, 0);
+        ctx.bezierCurveTo(-18, -15, -18, -length, 0, -length);
+        ctx.bezierCurveTo(18, -length, 18, -15, 0, 0);
         ctx.fill();
 
-        // Edge highlight
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.05)';
         ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, -length * 0.8);
         ctx.stroke();
 
         ctx.restore();
     }
 
-    // Prominent glowing yellow/white center
-    const centerGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, 20);
-    centerGlow.addColorStop(0, '#ffffff');
-    centerGlow.addColorStop(0.4, '#fffde7');
-    centerGlow.addColorStop(0.7, '#fff59d');
-    centerGlow.addColorStop(1, 'rgba(255, 245, 157, 0)');
+    const stamenCount = 5;
+    for (let i = 0; i < stamenCount; i++) {
+        const sAngle = (i * Math.PI * 2) / stamenCount - Math.PI / 2;
+        const sLen = 30;
 
-    ctx.fillStyle = centerGlow;
+        ctx.save();
+        ctx.rotate(sAngle + Math.sin(Date.now() * 0.002 + i) * 0.1);
+
+        ctx.strokeStyle = '#fffde7';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(5, -sLen / 2, 2, -sLen);
+        ctx.stroke();
+
+        ctx.fillStyle = '#5d4037';
+        ctx.beginPath();
+        ctx.ellipse(2, -sLen, 5, 2, Math.PI / 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+    }
+
+    ctx.fillStyle = '#dcedc8';
     ctx.beginPath();
-    ctx.ellipse(0, 0, 18, 10, 0, 0, Math.PI * 2);
+    ctx.arc(0, 0, 6, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();
@@ -308,7 +329,6 @@ function drawLeaf(ctx, x, y, size, angle) {
     ctx.rotate(angle);
     ctx.scale(size, size);
 
-    // Multilayered gradient for depth
     const gradient = ctx.createLinearGradient(0, 0, 45, 0);
     gradient.addColorStop(0, 'rgba(0, 120, 150, 0.9)');
     gradient.addColorStop(0.5, 'rgba(0, 200, 255, 0.6)');
@@ -320,7 +340,6 @@ function drawLeaf(ctx, x, y, size, angle) {
 
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    // Rounder, more organic leaf shape
     ctx.bezierCurveTo(15, -20, 45, -15, 55, 0);
     ctx.bezierCurveTo(45, 15, 15, 20, 0, 0);
     ctx.fill();
@@ -349,7 +368,7 @@ class Lily {
         this.speed = 2.0;
         this.bloomSpeed = 0.01;
 
-        this.leaves = []; // Store leaf positions relative to stem length
+        this.leaves = [];
     }
 
     update() {
@@ -365,27 +384,24 @@ class Lily {
     }
 
     draw(ctx, time) {
-        // Calculate sway - smooth waving effect
         const sway = Math.sin(time * 0.001 + this.index * 0.5) * 0.05;
         const currentAngle = this.targetAngle + sway;
 
         const endX = this.startX + Math.cos(currentAngle) * this.currentLen;
         const endY = this.startY + Math.sin(currentAngle) * this.currentLen;
 
-        // Draw Stem with Glow
         ctx.save();
-        ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
-        ctx.shadowBlur = 8;
-        ctx.shadowColor = '#00ffff';
-        ctx.lineWidth = this.isMobile ? 2 : 3;
+        ctx.strokeStyle = 'rgba(76, 175, 80, 0.4)';
+        ctx.shadowBlur = 6;
+        ctx.shadowColor = '#81c784';
+        ctx.lineWidth = this.isMobile ? 1.5 : 2.5;
         ctx.lineCap = 'round';
         ctx.beginPath();
         ctx.moveTo(this.startX, this.startY);
         ctx.lineTo(endX, endY);
         ctx.stroke();
 
-        // Highlight line inside stem
-        ctx.strokeStyle = '#fff';
+        ctx.strokeStyle = '#f1f8e9';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(this.startX, this.startY);
@@ -393,14 +409,12 @@ class Lily {
         ctx.stroke();
         ctx.restore();
 
-        // Draw Leaves
         this.leaves.forEach(leaf => {
             const lx = this.startX + Math.cos(currentAngle) * leaf.len;
             const ly = this.startY + Math.sin(currentAngle) * leaf.len;
             drawLeaf(ctx, lx, ly, (this.isMobile ? 0.6 : 1) * leaf.size, currentAngle + leaf.offset);
         });
 
-        // Draw Flower if blooming
         if (this.currentLen >= this.stemHeight && this.bloomSize > 0) {
             drawLily(ctx, endX, endY, this.bloomSize, this.color);
         }
@@ -414,7 +428,6 @@ function startTreeAnimation() {
     const centerX = treeCanvas.width / 2;
     const bottomY = treeCanvas.height;
 
-    // 3 lilies clustered
     const configs = [
         { angle: -Math.PI / 2, delay: 0 },
         { angle: -Math.PI / 2 - 0.3, delay: 400 },
@@ -447,7 +460,6 @@ function animateBouquet() {
         if (lily.bloomSize > maxBloom) maxBloom = lily.bloomSize;
     });
 
-    // Draw the yellow message once flowers start blooming
     if (maxBloom > 0.1) {
         drawMessage(maxBloom);
     }
@@ -461,25 +473,21 @@ function drawMessage(bloomFactor) {
     treeCtx.globalAlpha = opacity;
     treeCtx.textAlign = 'center';
 
-    // Position it slightly above the tallest stem (which is ~0.6 * height)
     const yPos = window.innerHeight * 0.25;
     const xPos = window.innerWidth / 2;
 
-    // Premium glowing yellow style
     treeCtx.shadowBlur = 15;
     treeCtx.shadowColor = '#fff59d';
-    treeCtx.fillStyle = '#fff9c4'; // Soft yellow
+    treeCtx.fillStyle = '#fff9c4';
     treeCtx.font = 'normal 4rem "Great Vibes", cursive';
 
-    // Add a slight floating animation
     const floatY = Math.sin(Date.now() * 0.002) * 10;
 
-    treeCtx.fillText('i love you', xPos, yPos + floatY);
+    treeCtx.fillText('I miss you', xPos, yPos + floatY);
 
-    // Subtle second layer for extra glow
     treeCtx.shadowBlur = 5;
     treeCtx.fillStyle = '#fffde7';
-    treeCtx.fillText('i love you', xPos, yPos + floatY);
+    treeCtx.fillText('I miss you', xPos, yPos + floatY);
 
     treeCtx.restore();
 }
@@ -496,7 +504,7 @@ function drawFireflies() {
                 speedY: (Math.random() - 0.5) * 0.8,
                 alpha: Math.random(),
                 osc: Math.random() * 100,
-                color: Math.random() > 0.5 ? '#fff9c4' : '#b2ff59' // mix of yellow and green glow
+                color: Math.random() > 0.5 ? '#fff9c4' : '#b2ff59'
             });
         }
     }
@@ -524,7 +532,6 @@ function drawFireflies() {
     });
 }
 
-// Fixed grass to be redrawn in the loop
 let grassParticles = [];
 function drawGrassStatic() {
     if (grassParticles.length === 0) {
