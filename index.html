@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Question for You</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #FFF0F5;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .interactive {
+            pointer-events: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="canvas-container"></div>
+
+    <div class="ui-layer" id="initial-ui">
+        <div class="envelope interactive" id="envelope">
+            <div class="envelope-content">
+                <p>I have a question for you...</p>
+                <div class="wax-seal">❤️</div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="ui-layer" id="quiz-q1" style="display: none; opacity: 0; transition: opacity 1s;">
+        <div class="question-container">
+            <h1>When is our anniversary?</h1>
+            <div class="buttons">
+                <button class="interactive quiz-btn" data-answer="9/9/23">9/9/23</button>
+                <button class="interactive quiz-btn" data-answer="6/6/24">6/6/24</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="ui-layer" id="quiz-q2" style="display: none; opacity: 0; transition: opacity 1s;">
+        <div class="question-container">
+            <h1>What is my favorite color?</h1>
+            <div class="buttons">
+                <button class="interactive quiz-btn" data-answer="green">Green</button>
+                <button class="interactive quiz-btn" data-answer="red">Red</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="ui-layer" id="quiz-q3" style="display: none; opacity: 0; transition: opacity 1s;">
+        <div class="question-container">
+            <h1>What is my favorite pet?</h1>
+            <div class="buttons">
+                <button class="interactive quiz-btn" data-answer="dog">Dog</button>
+                <button class="interactive quiz-btn" data-answer="cat">Cat</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="ui-layer" id="quiz-q4" style="display: none; opacity: 0; transition: opacity 1s;">
+        <div class="question-container">
+            <h1>Who is my favorite person?</h1>
+            <div class="buttons">
+                <button class="interactive quiz-btn" data-answer="nikolette">Nikolette</button>
+                <button class="interactive quiz-btn" data-answer="nicole">Nicole</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="ui-layer" id="question-ui" style="display: none; opacity: 0; transition: opacity 1s;">
+        <div class="question-container">
+            <h1>Will you be my Valentine?</h1>
+            <div class="buttons">
+                <button id="yes-btn" class="interactive">Yes</button>
+                <button id="no-btn" class="interactive">No</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="ui-layer" id="final-ui" style="display: none; opacity: 0; transition: opacity 2s;">
+        <div class="final-message">
+            <h1>Valentine's Day</h1>
+            <p>You + Me</p>
+            <p class="time">I love you, i miss you so much</p>
+            <div class="heart-pulse">❤️</div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
