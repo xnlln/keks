@@ -171,24 +171,22 @@ window.addEventListener('resize', function () {
 
 function getLilyTexture(color) {
     const svgString = `
-    <svg width="50" height="50" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <svg width="60" height="60" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
         <defs>
-            <filter id="glow">
-                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                <feMerge>
-                    <feMergeNode in="coloredBlur"/>
-                    <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-            </filter>
+            <radialGradient id="grad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" style="stop-color:white;stop-opacity:0.9" />
+                <stop offset="80%" style="stop-color:${color};stop-opacity:0.6" />
+                <stop offset="100%" style="stop-color:${color};stop-opacity:0" />
+            </radialGradient>
         </defs>
-        <g fill="${color}" stroke="none">
-             <path d="M50 50 Q30 5 50 0 Q70 5 50 50 z" />
-             <path d="M50 50 Q30 5 50 0 Q70 5 50 50 z" transform="rotate(60, 50, 50)" />
-             <path d="M50 50 Q30 5 50 0 Q70 5 50 50 z" transform="rotate(120, 50, 50)" />
-             <path d="M50 50 Q30 5 50 0 Q70 5 50 50 z" transform="rotate(180, 50, 50)" />
-             <path d="M50 50 Q30 5 50 0 Q70 5 50 50 z" transform="rotate(240, 50, 50)" />
-             <path d="M50 50 Q30 5 50 0 Q70 5 50 50 z" transform="rotate(300, 50, 50)" />
-             <circle cx="50" cy="50" r="8" fill="#FFFACD" />
+        <g stroke="none">
+             <!-- 5 smooth lily petals -->
+             <path fill="url(#grad)" d="M60 60 C40 50 35 15 60 5 C85 15 80 50 60 60" transform="rotate(0, 60, 60)" />
+             <path fill="url(#grad)" d="M60 60 C40 50 35 15 60 5 C85 15 80 50 60 60" transform="rotate(72, 60, 60)" />
+             <path fill="url(#grad)" d="M60 60 C40 50 35 15 60 5 C85 15 80 50 60 60" transform="rotate(144, 60, 60)" />
+             <path fill="url(#grad)" d="M60 60 C40 50 35 15 60 5 C85 15 80 50 60 60" transform="rotate(216, 60, 60)" />
+             <path fill="url(#grad)" d="M60 60 C40 50 35 15 60 5 C85 15 80 50 60 60" transform="rotate(288, 60, 60)" />
+             <circle cx="60" cy="60" r="10" fill="#FFFACD" opacity="0.9" />
         </g>
     </svg>`;
     return 'data:image/svg+xml;base64,' + btoa(svgString);
@@ -196,7 +194,7 @@ function getLilyTexture(color) {
 
 function createExplosion() {
     const bodies = [];
-    const colors = ['#FFB7C5', '#FFD1DC', '#FFF0F5', '#E6E6FA', '#FF69B4', '#FFD700'];
+    const colors = ['#ff9a9e', '#fecfef', '#ff758c', '#ff4d6d', '#ff1493', '#fff9c4'];
 
     for (let i = 0; i < 60; i++) {
         const x = window.innerWidth / 2 + (Math.random() - 0.5) * 50;
@@ -255,46 +253,50 @@ function drawLily(ctx, x, y, size, color) {
     ctx.translate(x, y);
     ctx.scale(size, size);
 
-    // Use standard composition for the core flower so it stays pink
-    ctx.globalCompositeOperation = 'source-over';
+    // Glow for the whole flower - pink glow
+    ctx.shadowBlur = 25;
+    ctx.shadowColor = color;
 
-    // Draw 5 petals - Soft, rounded, and pink
+    // Draw petals - Soft, rounded, and pink
     const petalCount = 5;
     for (let i = 0; i < petalCount; i++) {
         const angle = (i * Math.PI * 2) / petalCount - Math.PI / 2;
         ctx.save();
         ctx.rotate(angle);
 
-        // Petal Gradient: Solid pink core to soft pink edges
+        // Petal Gradient: Solid pink to soft white/transparent edges
         const gradient = ctx.createLinearGradient(0, 0, 0, -50);
         gradient.addColorStop(0, color);
-        gradient.addColorStop(0.6, color);
-        gradient.addColorStop(1, 'rgba(255, 255, 255, 0.5)');
+        gradient.addColorStop(0.5, color + 'cc');
+        gradient.addColorStop(0.8, 'rgba(255, 255, 255, 0.4)');
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
 
         ctx.fillStyle = gradient;
         ctx.beginPath();
         ctx.moveTo(0, 0);
-        // Rounded lily petal shape
-        ctx.bezierCurveTo(-18, -10, -22, -45, 0, -55);
-        ctx.bezierCurveTo(22, -45, 18, -10, 0, 0);
+        // Smoother, rounder petal shape
+        ctx.bezierCurveTo(-35, -15, -40, -50, 0, -65);
+        ctx.bezierCurveTo(40, -50, 35, -15, 0, 0);
         ctx.fill();
 
-        // Add a subtle white highlight on the edge
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        // Edge highlight
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
         ctx.lineWidth = 1;
         ctx.stroke();
 
         ctx.restore();
     }
 
-    // Glowing center
-    const centerGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, 10);
-    centerGlow.addColorStop(0, '#fff');
-    centerGlow.addColorStop(0.5, '#FFE55C');
-    centerGlow.addColorStop(1, 'rgba(255, 229, 92, 0)');
+    // Prominent glowing yellow/white center
+    const centerGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, 20);
+    centerGlow.addColorStop(0, '#ffffff');
+    centerGlow.addColorStop(0.4, '#fffde7');
+    centerGlow.addColorStop(0.7, '#fff59d');
+    centerGlow.addColorStop(1, 'rgba(255, 245, 157, 0)');
+
     ctx.fillStyle = centerGlow;
     ctx.beginPath();
-    ctx.arc(0, 0, 8, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, 18, 10, 0, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();
@@ -306,17 +308,21 @@ function drawLeaf(ctx, x, y, size, angle) {
     ctx.rotate(angle);
     ctx.scale(size, size);
 
-    const gradient = ctx.createLinearGradient(0, 0, 20, 0);
-    gradient.addColorStop(0, 'rgba(0, 100, 100, 0.8)');
-    gradient.addColorStop(0.5, 'rgba(0, 255, 255, 0.4)');
-    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    // Multilayered gradient for depth
+    const gradient = ctx.createLinearGradient(0, 0, 45, 0);
+    gradient.addColorStop(0, 'rgba(0, 120, 150, 0.9)');
+    gradient.addColorStop(0.5, 'rgba(0, 200, 255, 0.6)');
+    gradient.addColorStop(1, 'rgba(0, 255, 255, 0)');
 
     ctx.fillStyle = gradient;
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = 'rgba(0, 255, 255, 0.3)';
 
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.quadraticCurveTo(20, -10, 40, 0);
-    ctx.quadraticCurveTo(20, 10, 0, 0);
+    // Rounder, more organic leaf shape
+    ctx.bezierCurveTo(15, -20, 45, -15, 55, 0);
+    ctx.bezierCurveTo(45, 15, 15, 20, 0, 0);
     ctx.fill();
 
     ctx.restore();
@@ -333,15 +339,15 @@ class Lily {
         this.isMobile = isMobile;
         this.index = index;
 
-        const pinks = ['#FF69B4', '#FFB6C1', '#FF1493'];
+        const pinks = ['#ff69b4', '#ff85a1', '#ff4d6d'];
         this.color = pinks[index % 3];
 
-        this.stemHeight = isMobile ? window.innerHeight * 0.4 : window.innerHeight * 0.55;
+        this.stemHeight = isMobile ? window.innerHeight * 0.45 : window.innerHeight * 0.6;
         this.currentLen = 0;
         this.bloomSize = 0;
-        this.finalBloomSize = isMobile ? 1.0 : 1.5;
-        this.speed = 2.5;
-        this.bloomSpeed = 0.012;
+        this.finalBloomSize = isMobile ? 0.9 : 1.2;
+        this.speed = 2.0;
+        this.bloomSpeed = 0.01;
 
         this.leaves = []; // Store leaf positions relative to stem length
     }
@@ -349,9 +355,9 @@ class Lily {
     update() {
         if (this.currentLen < this.stemHeight) {
             this.currentLen += this.speed;
-            if (Math.floor(this.currentLen) % 80 === 0) {
-                const angleOffset = (Math.floor(this.currentLen / 80) % 2 === 0) ? 0.5 : -0.5;
-                this.leaves.push({ len: this.currentLen, offset: angleOffset });
+            if (Math.floor(this.currentLen) % 40 === 0) {
+                const angleOffset = (Math.floor(this.currentLen / 40) % 2 === 0) ? 0.6 : -0.6;
+                this.leaves.push({ len: this.currentLen, offset: angleOffset, size: 0.5 + Math.random() * 0.5 });
             }
         } else if (this.bloomSize < this.finalBloomSize) {
             this.bloomSize += this.bloomSpeed;
@@ -366,21 +372,32 @@ class Lily {
         const endX = this.startX + Math.cos(currentAngle) * this.currentLen;
         const endY = this.startY + Math.sin(currentAngle) * this.currentLen;
 
-        // Draw Stem
+        // Draw Stem with Glow
         ctx.save();
-        ctx.strokeStyle = '#1e381e';
-        ctx.lineWidth = this.isMobile ? 3 : 5;
+        ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = '#00ffff';
+        ctx.lineWidth = this.isMobile ? 2 : 3;
         ctx.lineCap = 'round';
         ctx.beginPath();
         ctx.moveTo(this.startX, this.startY);
         ctx.lineTo(endX, endY);
         ctx.stroke();
 
+        // Highlight line inside stem
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(this.startX, this.startY);
+        ctx.lineTo(endX, endY);
+        ctx.stroke();
+        ctx.restore();
+
         // Draw Leaves
         this.leaves.forEach(leaf => {
             const lx = this.startX + Math.cos(currentAngle) * leaf.len;
             const ly = this.startY + Math.sin(currentAngle) * leaf.len;
-            drawLeaf(ctx, lx, ly, this.isMobile ? 0.6 : 1, currentAngle + leaf.offset);
+            drawLeaf(ctx, lx, ly, (this.isMobile ? 0.6 : 1) * leaf.size, currentAngle + leaf.offset);
         });
 
         // Draw Flower if blooming
@@ -419,16 +436,92 @@ function startTreeAnimation() {
 function animateBouquet() {
     treeCtx.clearRect(0, 0, treeCanvas.width, treeCanvas.height);
 
-    // Draw background grass once or every frame
+    drawFireflies();
     drawGrassStatic();
 
     const time = Date.now();
+    let maxBloom = 0;
     lilies.forEach(lily => {
         lily.update();
         lily.draw(treeCtx, time);
+        if (lily.bloomSize > maxBloom) maxBloom = lily.bloomSize;
     });
 
+    // Draw the yellow message once flowers start blooming
+    if (maxBloom > 0.1) {
+        drawMessage(maxBloom);
+    }
+
     requestAnimationFrame(animateBouquet);
+}
+
+function drawMessage(bloomFactor) {
+    const opacity = Math.min(1, bloomFactor * 1.5);
+    treeCtx.save();
+    treeCtx.globalAlpha = opacity;
+    treeCtx.textAlign = 'center';
+
+    // Position it slightly above the tallest stem (which is ~0.6 * height)
+    const yPos = window.innerHeight * 0.25;
+    const xPos = window.innerWidth / 2;
+
+    // Premium glowing yellow style
+    treeCtx.shadowBlur = 15;
+    treeCtx.shadowColor = '#fff59d';
+    treeCtx.fillStyle = '#fff9c4'; // Soft yellow
+    treeCtx.font = 'normal 4rem "Great Vibes", cursive';
+
+    // Add a slight floating animation
+    const floatY = Math.sin(Date.now() * 0.002) * 10;
+
+    treeCtx.fillText('i love you', xPos, yPos + floatY);
+
+    // Subtle second layer for extra glow
+    treeCtx.shadowBlur = 5;
+    treeCtx.fillStyle = '#fffde7';
+    treeCtx.fillText('i love you', xPos, yPos + floatY);
+
+    treeCtx.restore();
+}
+
+let fireflies = [];
+function drawFireflies() {
+    if (fireflies.length === 0) {
+        for (let i = 0; i < 80; i++) {
+            fireflies.push({
+                x: Math.random() * treeCanvas.width,
+                y: Math.random() * treeCanvas.height,
+                size: Math.random() * 1.5 + 0.5,
+                speedX: (Math.random() - 0.5) * 0.8,
+                speedY: (Math.random() - 0.5) * 0.8,
+                alpha: Math.random(),
+                osc: Math.random() * 100,
+                color: Math.random() > 0.5 ? '#fff9c4' : '#b2ff59' // mix of yellow and green glow
+            });
+        }
+    }
+
+    fireflies.forEach(f => {
+        f.x += f.speedX;
+        f.y += f.speedY;
+        f.osc += 0.03;
+        f.alpha = Math.abs(Math.sin(f.osc));
+
+        if (f.x < 0) f.x = treeCanvas.width;
+        if (f.x > treeCanvas.width) f.x = 0;
+        if (f.y < 0) f.y = treeCanvas.height;
+        if (f.y > treeCanvas.height) f.y = 0;
+
+        treeCtx.save();
+        treeCtx.globalAlpha = f.alpha;
+        treeCtx.fillStyle = f.color;
+        treeCtx.shadowBlur = 8;
+        treeCtx.shadowColor = f.color;
+        treeCtx.beginPath();
+        treeCtx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
+        treeCtx.fill();
+        treeCtx.restore();
+    });
 }
 
 // Fixed grass to be redrawn in the loop
