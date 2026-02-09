@@ -1,6 +1,3 @@
-// ==========================================
-// 1. Imports & Physics Engine Setup
-// ==========================================
 const Engine = Matter.Engine,
     Render = Matter.Render,
     Runner = Matter.Runner,
@@ -12,11 +9,9 @@ const Engine = Matter.Engine,
     Body = Matter.Body,
     Vector = Matter.Vector;
 
-// Initialize Engine
 const engine = Engine.create();
-engine.world.gravity.y = 0; // No gravity for floating effect
+engine.world.gravity.y = 0;
 
-// Initialize Renderer
 const render = Render.create({
     element: document.getElementById('canvas-container'),
     engine: engine,
@@ -29,14 +24,9 @@ const render = Render.create({
 });
 Render.run(render);
 
-// Initialize Runner
 const runner = Runner.create();
 Runner.run(runner, engine);
 
-// ==========================================
-// 2. Scene Objects (Walls, Mouse)
-// ==========================================
-// Mouse Control
 const mouse = Mouse.create(render.canvas);
 const mouseConstraint = MouseConstraint.create(engine, {
     mouse: mouse,
@@ -48,21 +38,17 @@ const mouseConstraint = MouseConstraint.create(engine, {
 Composite.add(engine.world, mouseConstraint);
 render.mouse = mouse;
 
-// Boundary Walls
 const wallThickness = 50;
 const wallOptions = { isStatic: true, render: { visible: false } };
 const walls = [
-    Bodies.rectangle(window.innerWidth / 2, -wallThickness / 2, window.innerWidth, wallThickness, wallOptions), // Top
-    Bodies.rectangle(window.innerWidth / 2, window.innerHeight + wallThickness / 2, window.innerWidth, wallThickness, wallOptions), // Bottom
-    Bodies.rectangle(window.innerWidth + wallThickness / 2, window.innerHeight / 2, wallThickness, window.innerHeight, wallOptions), // Right
-    Bodies.rectangle(-wallThickness / 2, window.innerHeight / 2, wallThickness, window.innerHeight, wallOptions) // Left
+    Bodies.rectangle(window.innerWidth / 2, -wallThickness / 2, window.innerWidth, wallThickness, wallOptions),
+    Bodies.rectangle(window.innerWidth / 2, window.innerHeight + wallThickness / 2, window.innerWidth, wallThickness, wallOptions),
+    Bodies.rectangle(window.innerWidth + wallThickness / 2, window.innerHeight / 2, wallThickness, window.innerHeight, wallOptions),
+    Bodies.rectangle(-wallThickness / 2, window.innerHeight / 2, wallThickness, window.innerHeight, wallOptions)
 ];
 Composite.add(engine.world, walls);
 
 
-// ==========================================
-// 3. Game State & DOM Elements
-// ==========================================
 let state = 'initial';
 const envelope = document.getElementById('envelope');
 const initialUI = document.getElementById('initial-ui');
@@ -84,7 +70,6 @@ startBtn.addEventListener('click', function () {
         }, 1000);
     }).catch(error => {
         console.log("Audio play failed:", error);
-        // Fallback if audio fails
         loaderUI.style.opacity = '0';
         setTimeout(() => {
             loaderUI.style.display = 'none';
@@ -96,7 +81,6 @@ startBtn.addEventListener('click', function () {
 });
 
 
-// Quiz Configuration
 const quizSteps = [
     { id: 'quiz-q1', correct: ['9/9/23'] },
     { id: 'quiz-q2', correct: ['green'] },
@@ -106,46 +90,35 @@ const quizSteps = [
 let currentQuizIndex = 0;
 
 
-// ==========================================
-// 4. Interaction Logic & Event Listeners
-// ==========================================
-
-// Initial Envelope Click
 envelope.addEventListener('click', function () {
     state = 'quiz';
     transitionUI(initialUI, document.getElementById(quizSteps[0].id));
     createExplosion();
 });
 
-// Quiz Buttons Logic
 document.querySelectorAll('.quiz-btn').forEach(btn => {
     btn.addEventListener('click', function () {
         const answer = this.getAttribute('data-answer').toLowerCase();
         const currentStep = quizSteps[currentQuizIndex];
 
         if (currentStep.correct.includes(answer)) {
-            // Correct Answer
             const currentUI = document.getElementById(currentStep.id);
             currentQuizIndex++;
 
             if (currentQuizIndex < quizSteps.length) {
-                // Next Question
                 const nextUI = document.getElementById(quizSteps[currentQuizIndex].id);
                 transitionUI(currentUI, nextUI);
             } else {
-                // Quiz Finished -> Final Question
                 state = 'question';
                 transitionUI(currentUI, questionUI);
             }
         } else {
-            // Wrong Answer
             this.classList.add('shake');
             setTimeout(() => this.classList.remove('shake'), 500);
         }
     });
 });
 
-// "No" Button Evasion Logic
 function moveNoButton() {
     const maxX = window.innerWidth - noBtn.offsetWidth - 20;
     const maxY = window.innerHeight - noBtn.offsetHeight - 20;
@@ -161,28 +134,24 @@ function moveNoButton() {
 noBtn.addEventListener('mouseover', moveNoButton);
 noBtn.addEventListener('touchstart', (e) => { e.preventDefault(); moveNoButton(); });
 
-// "Yes" Button Click -> Start Tree Animation
 yesBtn.addEventListener('click', function () {
     state = 'final';
 
-    // Fade out question
     questionUI.style.opacity = '0';
     setTimeout(() => {
         questionUI.style.display = 'none';
+
     }, 500);
 
-    // Clean up Physics Engine
     Composite.clear(engine.world);
     Engine.clear(engine);
     Render.stop(render);
     Runner.stop(runner);
     document.getElementById('canvas-container').style.display = 'none';
 
-    // Start Tree Animation
     startTreeAnimation();
 });
 
-// UI Transition Helper
 function transitionUI(current, next) {
     current.style.opacity = '0';
     setTimeout(() => {
@@ -193,17 +162,12 @@ function transitionUI(current, next) {
     }, 500);
 }
 
-// Window Resize Handling
 window.addEventListener('resize', function () {
     render.canvas.width = window.innerWidth;
     render.canvas.height = window.innerHeight;
     resizeTreeCanvas();
 });
 
-
-// ==========================================
-// 5. Effects & Animations (Explosion)
-// ==========================================
 
 function getLilyTexture(color) {
     const svgString = `
@@ -266,7 +230,6 @@ function createExplosion() {
 
     Composite.add(engine.world, bodies);
 
-    // Apply explosive force
     bodies.forEach(body => {
         const forceMagnitude = 0.04 * body.mass;
         Body.applyForce(body, body.position, {
@@ -277,10 +240,6 @@ function createExplosion() {
     });
 }
 
-
-// ==========================================
-// 6. Tree Animation Logic
-// ==========================================
 
 const treeCanvas = document.getElementById('tree-canvas');
 const treeCtx = treeCanvas.getContext('2d');
@@ -306,9 +265,8 @@ function drawHeart(ctx, x, y, size, color) {
 
 function startTreeAnimation() {
     const startX = treeCanvas.width / 2;
-    const startY = treeCanvas.height; // From absolute bottom
+    const startY = treeCanvas.height;
 
-    // Responsive Dimensions
     const isMobile = window.innerWidth < 768;
     const trunkLen = isMobile ? window.innerHeight * 0.2 : 160;
     const trunkWidth = isMobile ? 10 : 14;
@@ -321,7 +279,7 @@ function growBranch(x, y, len, angle, width, depth) {
     const endY = y + Math.sin(angle) * len;
 
     let currentLen = 0;
-    const speed = 2; // Growth Speed
+    const speed = 2;
 
     function animateBranch() {
         if (currentLen < len) {
@@ -332,18 +290,17 @@ function growBranch(x, y, len, angle, width, depth) {
             treeCtx.beginPath();
             treeCtx.moveTo(x, y);
             treeCtx.lineTo(currentX, currentY);
-            treeCtx.strokeStyle = '#5d4037'; // Bark Color
+            treeCtx.strokeStyle = '#5d4037';
             treeCtx.lineWidth = width;
             treeCtx.lineCap = 'round';
             treeCtx.stroke();
 
             requestAnimationFrame(animateBranch);
         } else {
-            // Spawn Sub-branches
             if (depth > 0) {
                 const subBranches = 2;
                 for (let i = 0; i < subBranches; i++) {
-                    const newAngle = angle + (Math.random() - 0.5) * 1.5; // Spread
+                    const newAngle = angle + (Math.random() - 0.5) * 1.5;
                     const newLen = len * (0.7 + Math.random() * 0.2);
                     const newWidth = width * 0.7;
 

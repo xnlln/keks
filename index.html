@@ -9,40 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Great+Vibes&display=swap"
         rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background-color: #FFF0F5;
-        }
 
-        #canvas-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
-
-        .ui-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 10;
-            pointer-events: none;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .interactive {
-            pointer-events: auto;
-        }
-    </style>
 </head>
 
 <body>
@@ -66,10 +33,9 @@
         <button id="start-btn">Click to Enter</button>
     </div>
 
-    <div class="ui-layer" id="initial-ui" style="flex-direction: column; gap: 40px; display: none; opacity: 0;">
-        <h1 class="instruction-text"
-            style="color: #E0115F; font-size: 2rem; margin-bottom: 20px; text-shadow: 0 2px 4px rgba(255,255,255,0.8);">
-            Click to open</h1>
+    <div class="ui-layer" id="initial-ui"
+        style="flex-direction: column; gap: 40px; display: none; opacity: 0; transition: opacity 1s;">
+        <h1 class="instruction-text">Click to open</h1>
         <div class="envelope-container">
             <div class="envelope interactive" id="envelope">
                 <div class="envelope-content">
