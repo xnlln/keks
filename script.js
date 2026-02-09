@@ -67,12 +67,12 @@ const finalUI = document.getElementById('final-ui');
 const noBtn = document.getElementById('no-btn');
 const yesBtn = document.getElementById('yes-btn');
 
-// Quiz State
+
 const quizSteps = [
     { id: 'quiz-q1', correct: ['9/9/23'] },
     { id: 'quiz-q2', correct: ['green'] },
     { id: 'quiz-q3', correct: ['cat'] },
-    { id: 'quiz-q4', correct: ['nikolette', 'nicole'] } // Both valid
+    { id: 'quiz-q4', correct: ['nikolette', 'nicole'] }
 ];
 let currentQuizIndex = 0;
 

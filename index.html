@@ -47,11 +47,15 @@
 <body>
     <div id="canvas-container"></div>
 
-    <div class="ui-layer" id="initial-ui">
-        <div class="envelope interactive" id="envelope">
-            <div class="envelope-content">
-                <p>I have a question for you...</p>
-                <div class="wax-seal">❤️</div>
+    <div class="ui-layer" id="initial-ui" style="flex-direction: column; gap: 40px;">
+        <h1 class="instruction-text"
+            style="color: #E0115F; font-size: 2rem; margin-bottom: 20px; text-shadow: 0 2px 4px rgba(255,255,255,0.8);">
+            Click to open</h1>
+        <div class="envelope-container">
+            <div class="envelope interactive" id="envelope">
+                <div class="envelope-content">
+                    <div class="wax-seal">❤️</div>
+                </div>
             </div>
         </div>
     </div>
@@ -111,7 +115,7 @@
 
     <div class="ui-layer" id="final-ui" style="display: none; opacity: 0; transition: opacity 2s;">
         <div class="final-message">
-            <h1>Valentine's Day</h1>
+            <h1>Lets go!!!</h1>
             <p>You + Me</p>
             <p class="time">I love you, i miss you so much</p>
             <div class="heart-pulse">❤️</div>
