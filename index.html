@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>A Question for You</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Great+Vibes&display=swap"
+        rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <style>
         body {
@@ -45,9 +46,27 @@
 </head>
 
 <body>
+    <div class="bg-hearts">
+        <div class="heart-bg"></div>
+        <div class="heart-bg"></div>
+        <div class="heart-bg"></div>
+        <div class="heart-bg"></div>
+        <div class="heart-bg"></div>
+        <div class="heart-bg"></div>
+    </div>
     <div id="canvas-container"></div>
+    <canvas id="tree-canvas"></canvas>
 
-    <div class="ui-layer" id="initial-ui" style="flex-direction: column; gap: 40px;">
+    <audio id="bg-music" loop>
+        <source src="audio.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="ui-layer interactive" id="loader-ui">
+        <h1>For You ❤️</h1>
+        <button id="start-btn">Click to Enter</button>
+    </div>
+
+    <div class="ui-layer" id="initial-ui" style="flex-direction: column; gap: 40px; display: none; opacity: 0;">
         <h1 class="instruction-text"
             style="color: #E0115F; font-size: 2rem; margin-bottom: 20px; text-shadow: 0 2px 4px rgba(255,255,255,0.8);">
             Click to open</h1>
@@ -113,14 +132,7 @@
         </div>
     </div>
 
-    <div class="ui-layer" id="final-ui" style="display: none; opacity: 0; transition: opacity 2s;">
-        <div class="final-message">
-            <h1>Lets go!!!</h1>
-            <p>You + Me</p>
-            <p class="time">I love you, i miss you so much</p>
-            <div class="heart-pulse">❤️</div>
-        </div>
-    </div>
+
 
     <script src="script.js"></script>
 </body>

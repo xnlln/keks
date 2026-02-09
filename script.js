@@ -1,4 +1,7 @@
-var Engine = Matter.Engine,
+// ==========================================
+// 1. Imports & Physics Engine Setup
+// ==========================================
+const Engine = Matter.Engine,
     Render = Matter.Render,
     Runner = Matter.Runner,
     Bodies = Matter.Bodies,
@@ -9,10 +12,12 @@ var Engine = Matter.Engine,
     Body = Matter.Body,
     Vector = Matter.Vector;
 
-var engine = Engine.create();
-engine.world.gravity.y = 0;
+// Initialize Engine
+const engine = Engine.create();
+engine.world.gravity.y = 0; // No gravity for floating effect
 
-var render = Render.create({
+// Initialize Renderer
+const render = Render.create({
     element: document.getElementById('canvas-container'),
     engine: engine,
     options: {
@@ -22,52 +27,76 @@ var render = Render.create({
         background: 'transparent'
     }
 });
-
 Render.run(render);
 
-var runner = Runner.create();
+// Initialize Runner
+const runner = Runner.create();
 Runner.run(runner, engine);
 
-let state = 'initial';
-
-var mouse = Mouse.create(render.canvas),
-    mouseConstraint = MouseConstraint.create(engine, {
-        mouse: mouse,
-        constraint: {
-            stiffness: 0.2,
-            render: {
-                visible: false
-            }
-        }
-    });
-
+// ==========================================
+// 2. Scene Objects (Walls, Mouse)
+// ==========================================
+// Mouse Control
+const mouse = Mouse.create(render.canvas);
+const mouseConstraint = MouseConstraint.create(engine, {
+    mouse: mouse,
+    constraint: {
+        stiffness: 0.2,
+        render: { visible: false }
+    }
+});
 Composite.add(engine.world, mouseConstraint);
-
 render.mouse = mouse;
 
+// Boundary Walls
 const wallThickness = 50;
-const wallOptions = {
-    isStatic: true,
-    render: { visible: false }
-};
-
+const wallOptions = { isStatic: true, render: { visible: false } };
 const walls = [
-    Bodies.rectangle(window.innerWidth / 2, -wallThickness / 2, window.innerWidth, wallThickness, wallOptions),
-    Bodies.rectangle(window.innerWidth / 2, window.innerHeight + wallThickness / 2, window.innerWidth, wallThickness, wallOptions),
-    Bodies.rectangle(window.innerWidth + wallThickness / 2, window.innerHeight / 2, wallThickness, window.innerHeight, wallOptions),
-    Bodies.rectangle(-wallThickness / 2, window.innerHeight / 2, wallThickness, window.innerHeight, wallOptions)
+    Bodies.rectangle(window.innerWidth / 2, -wallThickness / 2, window.innerWidth, wallThickness, wallOptions), // Top
+    Bodies.rectangle(window.innerWidth / 2, window.innerHeight + wallThickness / 2, window.innerWidth, wallThickness, wallOptions), // Bottom
+    Bodies.rectangle(window.innerWidth + wallThickness / 2, window.innerHeight / 2, wallThickness, window.innerHeight, wallOptions), // Right
+    Bodies.rectangle(-wallThickness / 2, window.innerHeight / 2, wallThickness, window.innerHeight, wallOptions) // Left
 ];
-
 Composite.add(engine.world, walls);
 
+
+// ==========================================
+// 3. Game State & DOM Elements
+// ==========================================
+let state = 'initial';
 const envelope = document.getElementById('envelope');
 const initialUI = document.getElementById('initial-ui');
 const questionUI = document.getElementById('question-ui');
-const finalUI = document.getElementById('final-ui');
 const noBtn = document.getElementById('no-btn');
 const yesBtn = document.getElementById('yes-btn');
+const loaderUI = document.getElementById('loader-ui');
+const bgMusic = document.getElementById('bg-music');
+const startBtn = document.getElementById('start-btn');
+
+startBtn.addEventListener('click', function () {
+    bgMusic.play().then(() => {
+        loaderUI.style.opacity = '0';
+        setTimeout(() => {
+            loaderUI.style.display = 'none';
+            initialUI.style.display = 'flex';
+            void initialUI.offsetWidth;
+            initialUI.style.opacity = '1';
+        }, 1000);
+    }).catch(error => {
+        console.log("Audio play failed:", error);
+        // Fallback if audio fails
+        loaderUI.style.opacity = '0';
+        setTimeout(() => {
+            loaderUI.style.display = 'none';
+            initialUI.style.display = 'flex';
+            void initialUI.offsetWidth;
+            initialUI.style.opacity = '1';
+        }, 1000);
+    });
+});
 
 
+// Quiz Configuration
 const quizSteps = [
     { id: 'quiz-q1', correct: ['9/9/23'] },
     { id: 'quiz-q2', correct: ['green'] },
@@ -76,12 +105,84 @@ const quizSteps = [
 ];
 let currentQuizIndex = 0;
 
+
+// ==========================================
+// 4. Interaction Logic & Event Listeners
+// ==========================================
+
+// Initial Envelope Click
 envelope.addEventListener('click', function () {
     state = 'quiz';
     transitionUI(initialUI, document.getElementById(quizSteps[0].id));
     createExplosion();
 });
 
+// Quiz Buttons Logic
+document.querySelectorAll('.quiz-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+        const answer = this.getAttribute('data-answer').toLowerCase();
+        const currentStep = quizSteps[currentQuizIndex];
+
+        if (currentStep.correct.includes(answer)) {
+            // Correct Answer
+            const currentUI = document.getElementById(currentStep.id);
+            currentQuizIndex++;
+
+            if (currentQuizIndex < quizSteps.length) {
+                // Next Question
+                const nextUI = document.getElementById(quizSteps[currentQuizIndex].id);
+                transitionUI(currentUI, nextUI);
+            } else {
+                // Quiz Finished -> Final Question
+                state = 'question';
+                transitionUI(currentUI, questionUI);
+            }
+        } else {
+            // Wrong Answer
+            this.classList.add('shake');
+            setTimeout(() => this.classList.remove('shake'), 500);
+        }
+    });
+});
+
+// "No" Button Evasion Logic
+function moveNoButton() {
+    const maxX = window.innerWidth - noBtn.offsetWidth - 20;
+    const maxY = window.innerHeight - noBtn.offsetHeight - 20;
+    const padding = 20;
+
+    const randomX = Math.max(padding, Math.random() * maxX);
+    const randomY = Math.max(padding, Math.random() * maxY);
+
+    noBtn.style.position = 'fixed';
+    noBtn.style.left = randomX + 'px';
+    noBtn.style.top = randomY + 'px';
+}
+noBtn.addEventListener('mouseover', moveNoButton);
+noBtn.addEventListener('touchstart', (e) => { e.preventDefault(); moveNoButton(); });
+
+// "Yes" Button Click -> Start Tree Animation
+yesBtn.addEventListener('click', function () {
+    state = 'final';
+
+    // Fade out question
+    questionUI.style.opacity = '0';
+    setTimeout(() => {
+        questionUI.style.display = 'none';
+    }, 500);
+
+    // Clean up Physics Engine
+    Composite.clear(engine.world);
+    Engine.clear(engine);
+    Render.stop(render);
+    Runner.stop(runner);
+    document.getElementById('canvas-container').style.display = 'none';
+
+    // Start Tree Animation
+    startTreeAnimation();
+});
+
+// UI Transition Helper
 function transitionUI(current, next) {
     current.style.opacity = '0';
     setTimeout(() => {
@@ -92,35 +193,17 @@ function transitionUI(current, next) {
     }, 500);
 }
 
-
-document.querySelectorAll('.quiz-btn').forEach(btn => {
-    btn.addEventListener('click', function () {
-        const answer = this.getAttribute('data-answer').toLowerCase();
-        const currentStep = quizSteps[currentQuizIndex];
-
-        if (currentStep.correct.includes(answer)) {
-
-            const currentUI = document.getElementById(currentStep.id);
-            currentQuizIndex++;
-
-            if (currentQuizIndex < quizSteps.length) {
-
-                const nextUI = document.getElementById(quizSteps[currentQuizIndex].id);
-                transitionUI(currentUI, nextUI);
-            } else {
-
-                state = 'question';
-                transitionUI(currentUI, questionUI);
-            }
-        } else {
-
-            this.classList.add('shake');
-            setTimeout(() => {
-                this.classList.remove('shake');
-            }, 500);
-        }
-    });
+// Window Resize Handling
+window.addEventListener('resize', function () {
+    render.canvas.width = window.innerWidth;
+    render.canvas.height = window.innerHeight;
+    resizeTreeCanvas();
 });
+
+
+// ==========================================
+// 5. Effects & Animations (Explosion)
+// ==========================================
 
 function getLilyTexture(color) {
     const svgString = `
@@ -149,19 +232,18 @@ function getLilyTexture(color) {
 
 function createExplosion() {
     const bodies = [];
-    const colors = ['#FFB7C5', '#FFD1DC', '#FFF0F5', '#E6E6FA'];
+    const colors = ['#FFB7C5', '#FFD1DC', '#FFF0F5', '#E6E6FA', '#FF69B4', '#FFD700'];
 
     for (let i = 0; i < 60; i++) {
         const x = window.innerWidth / 2 + (Math.random() - 0.5) * 50;
         const y = window.innerHeight / 2 + (Math.random() - 0.5) * 50;
         const color = colors[Math.floor(Math.random() * colors.length)];
-        const texture = getLilyTexture(color);
         const scale = 0.5 + Math.random() * 0.8;
 
         const flower = Bodies.circle(x, y, 15 * scale, {
             render: {
                 sprite: {
-                    texture: texture,
+                    texture: getLilyTexture(color),
                     xScale: scale,
                     yScale: scale
                 }
@@ -184,91 +266,121 @@ function createExplosion() {
 
     Composite.add(engine.world, bodies);
 
+    // Apply explosive force
     bodies.forEach(body => {
         const forceMagnitude = 0.04 * body.mass;
         Body.applyForce(body, body.position, {
             x: (Math.random() - 0.5) * forceMagnitude,
             y: (Math.random() - 0.5) * forceMagnitude
         });
-
         Body.setAngularVelocity(body, (Math.random() - 0.5) * 0.2);
     });
 }
 
-function moveNoButton() {
-    const maxX = window.innerWidth - noBtn.offsetWidth - 20;
-    const maxY = window.innerHeight - noBtn.offsetHeight - 20;
-    const padding = 20;
 
-    const randomX = Math.max(padding, Math.random() * maxX);
-    const randomY = Math.max(padding, Math.random() * maxY);
+// ==========================================
+// 6. Tree Animation Logic
+// ==========================================
 
-    noBtn.style.position = 'fixed';
-    noBtn.style.left = randomX + 'px';
-    noBtn.style.top = randomY + 'px';
+const treeCanvas = document.getElementById('tree-canvas');
+const treeCtx = treeCanvas.getContext('2d');
+
+function resizeTreeCanvas() {
+    treeCanvas.width = window.innerWidth;
+    treeCanvas.height = window.innerHeight;
+}
+resizeTreeCanvas();
+
+function drawHeart(ctx, x, y, size, color) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(size, size);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.bezierCurveTo(-10, -10, -20, 5, 0, 20);
+    ctx.bezierCurveTo(20, 5, 10, -10, 0, 0);
+    ctx.fill();
+    ctx.restore();
 }
 
-noBtn.addEventListener('mouseover', moveNoButton);
-noBtn.addEventListener('touchstart', function (e) {
-    e.preventDefault();
-    moveNoButton();
-});
+function startTreeAnimation() {
+    const startX = treeCanvas.width / 2;
+    const startY = treeCanvas.height; // From absolute bottom
 
-yesBtn.addEventListener('click', function () {
-    state = 'final';
+    // Responsive Dimensions
+    const isMobile = window.innerWidth < 768;
+    const trunkLen = isMobile ? window.innerHeight * 0.2 : 160;
+    const trunkWidth = isMobile ? 10 : 14;
 
-    questionUI.style.opacity = '0';
-    setTimeout(() => {
-        questionUI.style.display = 'none';
-        finalUI.style.display = 'flex';
-        void finalUI.offsetWidth;
-        finalUI.style.opacity = '1';
-    }, 500);
-
-    formHeart();
-});
-
-function formHeart() {
-    const bodies = Composite.allBodies(engine.world);
-    const mobileBodies = bodies.filter(b => !b.isStatic);
-
-    const centerX = window.innerWidth / 2;
-    const centerY = window.innerHeight / 2 - 50;
-    const scale = Math.min(window.innerWidth, window.innerHeight) / 40;
-
-    mobileBodies.forEach((body, index) => {
-        const t = (index / mobileBodies.length) * 2 * Math.PI;
-
-        const x = 16 * Math.pow(Math.sin(t), 3);
-        const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
-
-        const targetX = centerX + x * scale;
-        const targetY = centerY + y * scale;
-
-        body.targetPos = { x: targetX, y: targetY };
-
-        body.frictionAir = 0.05;
-        body.restitution = 0.2;
-    });
-
-    Events.on(engine, 'beforeUpdate', function () {
-        if (state !== 'final') return;
-
-        mobileBodies.forEach(body => {
-            if (!body.targetPos) return;
-
-            const dx = body.targetPos.x - body.position.x;
-            const dy = body.targetPos.y - body.position.y;
-
-            const forceX = dx * 0.0001 * body.mass;
-            const forceY = dy * 0.0001 * body.mass;
-
-            Body.applyForce(body, body.position, { x: forceX, y: forceY });
-        });
-    });
+    growBranch(startX, startY, trunkLen, -Math.PI / 2, trunkWidth, isMobile ? 8 : 10);
 }
 
-window.addEventListener('resize', function () {
-    render.canvas.width = window.innerWidth;
-    render.canvas.height = window.innerHeight;
-});
+function growBranch(x, y, len, angle, width, depth) {
+    const endX = x + Math.cos(angle) * len;
+    const endY = y + Math.sin(angle) * len;
+
+    let currentLen = 0;
+    const speed = 2; // Growth Speed
+
+    function animateBranch() {
+        if (currentLen < len) {
+            currentLen += speed;
+            const currentX = x + Math.cos(angle) * currentLen;
+            const currentY = y + Math.sin(angle) * currentLen;
+
+            treeCtx.beginPath();
+            treeCtx.moveTo(x, y);
+            treeCtx.lineTo(currentX, currentY);
+            treeCtx.strokeStyle = '#5d4037'; // Bark Color
+            treeCtx.lineWidth = width;
+            treeCtx.lineCap = 'round';
+            treeCtx.stroke();
+
+            requestAnimationFrame(animateBranch);
+        } else {
+            // Spawn Sub-branches
+            if (depth > 0) {
+                const subBranches = 2;
+                for (let i = 0; i < subBranches; i++) {
+                    const newAngle = angle + (Math.random() - 0.5) * 1.5; // Spread
+                    const newLen = len * (0.7 + Math.random() * 0.2);
+                    const newWidth = width * 0.7;
+
+                    setTimeout(() => {
+                        growBranch(endX, endY, newLen, newAngle, newWidth, depth - 1);
+                    }, Math.random() * 200);
+                }
+            } else {
+                spawnLeaves(endX, endY);
+            }
+        }
+    }
+    animateBranch();
+}
+
+function spawnLeaves(x, y) {
+    const leafCount = 3 + Math.floor(Math.random() * 3);
+    const colors = ['#ff4d6d', '#ff9a9e', '#ffc0cb', '#e0115f'];
+
+    const isMobile = window.innerWidth < 768;
+    const baseSize = isMobile ? 0.3 : 0.5;
+
+    for (let i = 0; i < leafCount; i++) {
+        const size = baseSize + Math.random() * (isMobile ? 0.4 : 0.6);
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const spread = isMobile ? 25 : 40;
+        const offsetX = (Math.random() - 0.5) * spread;
+        const offsetY = (Math.random() - 0.5) * spread;
+
+        let s = 0;
+        function popLeaf() {
+            if (s < size) {
+                s += 0.05;
+                drawHeart(treeCtx, x + offsetX, y + offsetY, s, color);
+                requestAnimationFrame(popLeaf);
+            }
+        }
+        setTimeout(popLeaf, Math.random() * 500);
+    }
+}
