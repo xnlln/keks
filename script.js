@@ -138,9 +138,9 @@ yesBtn.addEventListener('click', function () {
     state = 'final';
 
     questionUI.style.opacity = '0';
+    document.body.classList.add('dark-theme'); // Make it dark for the glow
     setTimeout(() => {
         questionUI.style.display = 'none';
-
     }, 500);
 
     Composite.clear(engine.world);
@@ -250,94 +250,218 @@ function resizeTreeCanvas() {
 }
 resizeTreeCanvas();
 
-function drawHeart(ctx, x, y, size, color) {
+function drawLily(ctx, x, y, size, color) {
     ctx.save();
     ctx.translate(x, y);
     ctx.scale(size, size);
-    ctx.fillStyle = color;
+
+    // Use standard composition for the core flower so it stays pink
+    ctx.globalCompositeOperation = 'source-over';
+
+    // Draw 5 petals - Soft, rounded, and pink
+    const petalCount = 5;
+    for (let i = 0; i < petalCount; i++) {
+        const angle = (i * Math.PI * 2) / petalCount - Math.PI / 2;
+        ctx.save();
+        ctx.rotate(angle);
+
+        // Petal Gradient: Solid pink core to soft pink edges
+        const gradient = ctx.createLinearGradient(0, 0, 0, -50);
+        gradient.addColorStop(0, color);
+        gradient.addColorStop(0.6, color);
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0.5)');
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        // Rounded lily petal shape
+        ctx.bezierCurveTo(-18, -10, -22, -45, 0, -55);
+        ctx.bezierCurveTo(22, -45, 18, -10, 0, 0);
+        ctx.fill();
+
+        // Add a subtle white highlight on the edge
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
+    // Glowing center
+    const centerGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, 10);
+    centerGlow.addColorStop(0, '#fff');
+    centerGlow.addColorStop(0.5, '#FFE55C');
+    centerGlow.addColorStop(1, 'rgba(255, 229, 92, 0)');
+    ctx.fillStyle = centerGlow;
     ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.bezierCurveTo(-10, -10, -20, 5, 0, 20);
-    ctx.bezierCurveTo(20, 5, 10, -10, 0, 0);
+    ctx.arc(0, 0, 8, 0, Math.PI * 2);
     ctx.fill();
+
     ctx.restore();
 }
 
+function drawLeaf(ctx, x, y, size, angle) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.scale(size, size);
+
+    const gradient = ctx.createLinearGradient(0, 0, 20, 0);
+    gradient.addColorStop(0, 'rgba(0, 100, 100, 0.8)');
+    gradient.addColorStop(0.5, 'rgba(0, 255, 255, 0.4)');
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+    ctx.fillStyle = gradient;
+
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(20, -10, 40, 0);
+    ctx.quadraticCurveTo(20, 10, 0, 0);
+    ctx.fill();
+
+    ctx.restore();
+}
+
+const lilies = [];
+let animationStarted = false;
+
+class Lily {
+    constructor(startX, startY, targetAngle, isMobile, index) {
+        this.startX = startX;
+        this.startY = startY;
+        this.targetAngle = targetAngle;
+        this.isMobile = isMobile;
+        this.index = index;
+
+        const pinks = ['#FF69B4', '#FFB6C1', '#FF1493'];
+        this.color = pinks[index % 3];
+
+        this.stemHeight = isMobile ? window.innerHeight * 0.4 : window.innerHeight * 0.55;
+        this.currentLen = 0;
+        this.bloomSize = 0;
+        this.finalBloomSize = isMobile ? 1.0 : 1.5;
+        this.speed = 2.5;
+        this.bloomSpeed = 0.012;
+
+        this.leaves = []; // Store leaf positions relative to stem length
+    }
+
+    update() {
+        if (this.currentLen < this.stemHeight) {
+            this.currentLen += this.speed;
+            if (Math.floor(this.currentLen) % 80 === 0) {
+                const angleOffset = (Math.floor(this.currentLen / 80) % 2 === 0) ? 0.5 : -0.5;
+                this.leaves.push({ len: this.currentLen, offset: angleOffset });
+            }
+        } else if (this.bloomSize < this.finalBloomSize) {
+            this.bloomSize += this.bloomSpeed;
+        }
+    }
+
+    draw(ctx, time) {
+        // Calculate sway - smooth waving effect
+        const sway = Math.sin(time * 0.001 + this.index * 0.5) * 0.05;
+        const currentAngle = this.targetAngle + sway;
+
+        const endX = this.startX + Math.cos(currentAngle) * this.currentLen;
+        const endY = this.startY + Math.sin(currentAngle) * this.currentLen;
+
+        // Draw Stem
+        ctx.save();
+        ctx.strokeStyle = '#1e381e';
+        ctx.lineWidth = this.isMobile ? 3 : 5;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(this.startX, this.startY);
+        ctx.lineTo(endX, endY);
+        ctx.stroke();
+
+        // Draw Leaves
+        this.leaves.forEach(leaf => {
+            const lx = this.startX + Math.cos(currentAngle) * leaf.len;
+            const ly = this.startY + Math.sin(currentAngle) * leaf.len;
+            drawLeaf(ctx, lx, ly, this.isMobile ? 0.6 : 1, currentAngle + leaf.offset);
+        });
+
+        // Draw Flower if blooming
+        if (this.currentLen >= this.stemHeight && this.bloomSize > 0) {
+            drawLily(ctx, endX, endY, this.bloomSize, this.color);
+        }
+
+        ctx.restore();
+    }
+}
+
 function startTreeAnimation() {
-    const startX = treeCanvas.width / 2;
-    const startY = treeCanvas.height;
-
     const isMobile = window.innerWidth < 768;
-    const trunkLen = isMobile ? window.innerHeight * 0.2 : 160;
-    const trunkWidth = isMobile ? 10 : 14;
+    const centerX = treeCanvas.width / 2;
+    const bottomY = treeCanvas.height;
 
-    growBranch(startX, startY, trunkLen, -Math.PI / 2, trunkWidth, isMobile ? 8 : 10);
+    // 3 lilies clustered
+    const configs = [
+        { angle: -Math.PI / 2, delay: 0 },
+        { angle: -Math.PI / 2 - 0.3, delay: 400 },
+        { angle: -Math.PI / 2 + 0.3, delay: 800 }
+    ];
+
+    configs.forEach((conf, i) => {
+        setTimeout(() => {
+            lilies.push(new Lily(centerX, bottomY, conf.angle, isMobile, i));
+        }, conf.delay);
+    });
+
+    if (!animationStarted) {
+        animationStarted = true;
+        animateBouquet();
+    }
 }
 
-function growBranch(x, y, len, angle, width, depth) {
-    const endX = x + Math.cos(angle) * len;
-    const endY = y + Math.sin(angle) * len;
+function animateBouquet() {
+    treeCtx.clearRect(0, 0, treeCanvas.width, treeCanvas.height);
 
-    let currentLen = 0;
-    const speed = 2;
+    // Draw background grass once or every frame
+    drawGrassStatic();
 
-    function animateBranch() {
-        if (currentLen < len) {
-            currentLen += speed;
-            const currentX = x + Math.cos(angle) * currentLen;
-            const currentY = y + Math.sin(angle) * currentLen;
+    const time = Date.now();
+    lilies.forEach(lily => {
+        lily.update();
+        lily.draw(treeCtx, time);
+    });
 
-            treeCtx.beginPath();
-            treeCtx.moveTo(x, y);
-            treeCtx.lineTo(currentX, currentY);
-            treeCtx.strokeStyle = '#5d4037';
-            treeCtx.lineWidth = width;
-            treeCtx.lineCap = 'round';
-            treeCtx.stroke();
-
-            requestAnimationFrame(animateBranch);
-        } else {
-            if (depth > 0) {
-                const subBranches = 2;
-                for (let i = 0; i < subBranches; i++) {
-                    const newAngle = angle + (Math.random() - 0.5) * 1.5;
-                    const newLen = len * (0.7 + Math.random() * 0.2);
-                    const newWidth = width * 0.7;
-
-                    setTimeout(() => {
-                        growBranch(endX, endY, newLen, newAngle, newWidth, depth - 1);
-                    }, Math.random() * 200);
-                }
-            } else {
-                spawnLeaves(endX, endY);
-            }
-        }
-    }
-    animateBranch();
+    requestAnimationFrame(animateBouquet);
 }
 
-function spawnLeaves(x, y) {
-    const leafCount = 3 + Math.floor(Math.random() * 3);
-    const colors = ['#ff4d6d', '#ff9a9e', '#ffc0cb', '#e0115f'];
-
-    const isMobile = window.innerWidth < 768;
-    const baseSize = isMobile ? 0.3 : 0.5;
-
-    for (let i = 0; i < leafCount; i++) {
-        const size = baseSize + Math.random() * (isMobile ? 0.4 : 0.6);
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        const spread = isMobile ? 25 : 40;
-        const offsetX = (Math.random() - 0.5) * spread;
-        const offsetY = (Math.random() - 0.5) * spread;
-
-        let s = 0;
-        function popLeaf() {
-            if (s < size) {
-                s += 0.05;
-                drawHeart(treeCtx, x + offsetX, y + offsetY, s, color);
-                requestAnimationFrame(popLeaf);
-            }
+// Fixed grass to be redrawn in the loop
+let grassParticles = [];
+function drawGrassStatic() {
+    if (grassParticles.length === 0) {
+        const count = 40;
+        for (let i = 0; i < count; i++) {
+            grassParticles.push({
+                x: Math.random() * treeCanvas.width,
+                h: 50 + Math.random() * 100,
+                waviness: Math.random() * 0.2 + 0.1
+            });
         }
-        setTimeout(popLeaf, Math.random() * 500);
     }
+
+    const time = Date.now();
+    grassParticles.forEach(g => {
+        treeCtx.save();
+        treeCtx.translate(g.x, treeCanvas.height);
+
+        const sway = Math.sin(time * 0.0015 + g.x) * 5;
+
+        const grad = treeCtx.createLinearGradient(0, 0, 0, -g.h);
+        grad.addColorStop(0, '#001a1a');
+        grad.addColorStop(1, '#00ffcc22');
+
+        treeCtx.strokeStyle = grad;
+        treeCtx.lineWidth = 2;
+        treeCtx.beginPath();
+        treeCtx.moveTo(0, 0);
+        treeCtx.quadraticCurveTo(10 + sway, -g.h / 2, sway, -g.h);
+        treeCtx.stroke();
+        treeCtx.restore();
+    });
 }
